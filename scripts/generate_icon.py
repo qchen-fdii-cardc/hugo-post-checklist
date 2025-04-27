@@ -45,7 +45,7 @@ def create_icon_for_size(size):
         wave_font = ImageFont.load_default()
         wave_font_size = int(size * 0.2)
 
-    wave = "~"
+    wave = "~ ~"
     wave_bbox = draw.textbbox((0, 0), wave, font=wave_font)
     wave_width = wave_bbox[2] - wave_bbox[0]
     wave_height = wave_bbox[3] - wave_bbox[1]
