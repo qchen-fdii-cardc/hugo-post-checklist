@@ -1,67 +1,89 @@
 import os
+import re
+import subprocess
 import sys
-from fontTools.ttLib import TTFont
-from fontTools.subset import Subsetter, Options
+from pathlib import Path
+
+
+def extract_chinese_chars():
+    """从 text.rs 文件中提取所有中文字符"""
+    try:
+        # 获取项目根目录
+        project_root = Path(__file__).parent.parent
+        text_rs_path = project_root / "src" / "text.rs"
+
+        # 读取 text.rs 文件
+        with open(text_rs_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # 使用正则表达式提取所有中文字符
+        chinese_chars = re.findall(r'[\u4e00-\u9fff]', content)
+
+        # 去重并排序
+        chinese_chars = sorted(set(chinese_chars))
+
+        # 将字符列表转换为字符串
+        chars_str = "".join(chinese_chars)
+
+        print(f"成功读取 text.rs，提取到 {len(chinese_chars)} 个中文字符")
+        return chars_str
+
+    except Exception as e:
+        print(f"错误：{e}")
+        sys.exit(1)
+
+
+def create_font_subset(chars):
+    """创建字体子集"""
+    project_root = Path(__file__).parent.parent
+    font_path = project_root / "fonts" / "霞鹜文楷.ttf"
+    output_path = project_root / "fonts" / "custom_font.ttf"
+
+    # 检查源字体文件是否存在
+    if not font_path.exists():
+        print(f"错误：字体文件不存在：{font_path}")
+        sys.exit(1)
+
+    print("开始创建字体子集...")
+    try:
+        # 使用 pyftsubset 创建字体子集
+        subprocess.run([
+            "pyftsubset",
+            str(font_path),
+            f"--text={chars}",
+            "--output-file=" + str(output_path),
+            "--no-hinting",
+            "--desubroutinize",
+            "--no-recommended-glyphs",
+            "--layout-features=*",
+            "--glyph-names",
+            "--symbol-cmap",
+            "--legacy-cmap",
+            "--notdef-glyph",
+            "--notdef-outline",
+            "--recommended-glyphs",
+            "--name-IDs=*",
+            "--name-legacy",
+            "--name-languages=*"
+        ], check=True)
+
+        print(f"字体子集创建成功：{output_path}")
+
+    except Exception as e:
+        print(f"创建字体子集失败：{e}")
+        sys.exit(1)
 
 
 def main():
     print("开始处理...")
 
-    # 读取中文字符
-    try:
-        with open('src/chars.rs', 'r', encoding='utf-8') as f:
-            content = f.read()
-            print(f"成功读取 chars.rs，内容长度：{len(content)}")
-    except Exception as e:
-        print(f"读取 chars.rs 失败：{e}")
-        return
-
     # 提取中文字符
-    chars = set()
-    for char in content:
-        if '\u4e00' <= char <= '\u9fff':  # 中文字符范围
-            chars.add(char)
-    print(f"提取到 {len(chars)} 个中文字符")
+    chars = extract_chinese_chars()
 
-    # 确保输出目录存在
-    os.makedirs('fonts', exist_ok=True)
+    # 创建字体子集
+    create_font_subset(chars)
 
-    # 使用已有的字体文件
-    font_path = "fonts/霞鹜文楷.ttf"
-
-    try:
-        # 验证字体文件
-        if not os.path.exists(font_path):
-            print(f"错误：字体文件 {font_path} 不存在")
-            return
-
-        file_size = os.path.getsize(font_path)
-        print(f"字体文件大小：{file_size} 字节")
-        if file_size < 1000000:  # 字体文件通常应该大于1MB
-            print("警告：字体文件大小异常，可能不完整")
-            return
-
-    except Exception as e:
-        print(f"处理字体文件时出错：{e}")
-        return
-
-    try:
-        # 创建字体子集
-        print("开始创建字体子集...")
-        font = TTFont(font_path)
-        subsetter = Subsetter()
-        text = ''.join(chars)
-        subsetter.populate(text=text)
-        subsetter.subset(font)
-
-        # 保存子集字体
-        output_path = "fonts/custom_font.ttf"
-        font.save(output_path)
-        print(f"字体子集创建成功：{output_path}")
-
-    except Exception as e:
-        print(f"创建字体子集时出错：{e}")
-        return
+    print("处理完成！")
 
 
 if __name__ == "__main__":

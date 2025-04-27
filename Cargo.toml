@@ -5,10 +5,12 @@ edition = "2021"
 
 # 设置 Windows 子系统为 "windows"，这样程序就会编译为 GUI 程序
 [target.'cfg(windows)'.build-dependencies]
-winres = "0.1"
+winres = "0.1.12"
 
 [dependencies]
-eframe = "0.26.2"
+eframe = "0.26.0"
+windows-sys = { version = "0.52.0", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation", "Win32_System_Console"] }
+image = "0.24.7"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.48", features = [
