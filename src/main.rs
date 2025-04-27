@@ -99,8 +99,8 @@ impl eframe::App for PostChecklist {
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([600.0, 500.0])  // 增加窗口尺寸
-            .with_min_inner_size([500.0, 400.0])  // 增加最小窗口尺寸
+            .with_inner_size([600.0, 500.0])
+            .with_resizable(false)  // 设置窗口不可调整大小
             .with_title(text::WINDOW_TITLE)
             .with_always_on_top()
             .with_icon(load_icon()),
@@ -154,6 +154,8 @@ fn load_icon() -> IconData {
     match image::open(icon_path) {
         Ok(image) => {
             log("成功打开图标文件");
+            // 将图像调整为32x32大小，这是Windows图标的标准尺寸
+            let image = image.resize_exact(32, 32, image::imageops::FilterType::Lanczos3);
             let rgba = image.to_rgba8();
             let (width, height) = rgba.dimensions();
             log(&format!("图标尺寸: {}x{}", width, height));
@@ -173,9 +175,16 @@ fn load_icon() -> IconData {
 
 fn default_icon() -> IconData {
     log("使用默认图标");
+    // 创建一个16x16的默认图标，使用蓝色而不是白色
+    let size: u32 = 16;
+    let color = vec![0u8, 102, 204, 255];
+    let mut rgba = Vec::with_capacity((size * size * 4) as usize);
+    for _ in 0..((size * size) as usize) {
+        rgba.extend_from_slice(&color);
+    }
     IconData {
-        rgba: vec![255, 255, 255, 255],
-        width: 1,
-        height: 1,
+        rgba,
+        width: size,
+        height: size,
     }
 }
