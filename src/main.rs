@@ -2,7 +2,6 @@
 
 use eframe::egui;
 use egui::IconData;
-use std::path::Path;
 mod text;
 
 #[cfg(debug_assertions)]
@@ -33,19 +32,21 @@ impl Default for PostChecklist {
 impl PostChecklist {
     fn update_current_step(&mut self) {
         // 找到第一个未完成的步骤
-        self.current_step = self.steps.iter()
+        self.current_step = self
+            .steps
+            .iter()
             .position(|(_, checked)| !checked)
             .unwrap_or(self.steps.len());
     }
 
-    fn uncheck_following_steps(&mut self, from_step: usize) {
-        // 取消从指定步骤开始的所有后续步骤
-        for (_, checked) in self.steps.iter_mut().skip(from_step) {
-            *checked = false;
-        }
-        // 更新当前步骤
-        self.update_current_step();
-    }
+    // fn uncheck_following_steps(&mut self, from_step: usize) {
+    //     // 取消从指定步骤开始的所有后续步骤
+    //     for (_, checked) in self.steps.iter_mut().skip(from_step) {
+    //         *checked = false;
+    //     }
+    //     // 更新当前步骤
+    //     self.update_current_step();
+    // }
 }
 
 impl eframe::App for PostChecklist {
@@ -61,7 +62,7 @@ impl eframe::App for PostChecklist {
                 let can_check = i <= self.current_step;
                 let step_text = self.steps[i].0.clone();
                 let mut checked = self.steps[i].1;
-                
+
                 if can_check {
                     if ui.checkbox(&mut checked, step_text.as_str()).changed() {
                         self.steps[i].1 = checked;
@@ -100,7 +101,7 @@ fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([600.0, 500.0])
-            .with_resizable(false)  // 设置窗口不可调整大小
+            .with_resizable(false) // 设置窗口不可调整大小
             .with_title(text::WINDOW_TITLE)
             .with_always_on_top()
             .with_icon(load_icon()),
@@ -113,7 +114,7 @@ fn main() -> Result<(), eframe::Error> {
         Box::new(|cc| {
             // 设置中文字体
             let mut fonts = egui::FontDefinitions::default();
-            
+
             // 添加自定义字体
             fonts.font_data.insert(
                 "custom_font".to_owned(),
@@ -121,45 +122,44 @@ fn main() -> Result<(), eframe::Error> {
             );
 
             // 将字体添加到所有字体族
-            fonts.families
+            fonts
+                .families
                 .get_mut(&egui::FontFamily::Proportional)
                 .unwrap()
                 .insert(0, "custom_font".to_owned());
 
-            fonts.families
+            fonts
+                .families
                 .get_mut(&egui::FontFamily::Monospace)
                 .unwrap()
                 .insert(0, "custom_font".to_owned());
 
             // 应用字体设置
             cc.egui_ctx.set_fonts(fonts);
-            
+
             // 设置界面缩放
             cc.egui_ctx.set_pixels_per_point(1.5);
-            
+
             Box::new(PostChecklist::default())
         }),
     )
 }
 
 fn load_icon() -> IconData {
-    let icon_path = Path::new("icons/app.ico");
-    log(&format!("尝试加载图标: {:?}", icon_path));
-    
-    if !icon_path.exists() {
-        log("错误：图标文件不存在");
-        return default_icon();
-    }
-    
-    match image::open(icon_path) {
+    log("尝试加载嵌入的图标");
+
+    // 嵌入图标文件
+    let icon_bytes = include_bytes!("../icons/app.ico");
+
+    match image::load_from_memory(icon_bytes) {
         Ok(image) => {
-            log("成功打开图标文件");
+            log("成功加载嵌入的图标");
             // 将图像调整为32x32大小，这是Windows图标的标准尺寸
             let image = image.resize_exact(32, 32, image::imageops::FilterType::Lanczos3);
             let rgba = image.to_rgba8();
             let (width, height) = rgba.dimensions();
             log(&format!("图标尺寸: {}x{}", width, height));
-            
+
             IconData {
                 rgba: rgba.into_raw(),
                 width: width as _,
@@ -167,7 +167,7 @@ fn load_icon() -> IconData {
             }
         }
         Err(e) => {
-            log(&format!("错误：无法打开图标文件: {}", e));
+            log(&format!("错误：无法加载嵌入的图标: {}", e));
             default_icon()
         }
     }

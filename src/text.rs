@@ -15,23 +15,23 @@ pub const CHECKLIST_ITEMS: &[&str] = &[
 ];
 
 // 获取所有需要包含在字体中的字符
-pub fn get_all_chars() -> String {
-    let mut chars = String::new();
-    
-    // 添加标题
-    chars.push_str(WINDOW_TITLE);
-    chars.push_str(HEADING);
-    chars.push_str(RESET_BUTTON);
-    
-    // 添加所有清单项
-    for item in CHECKLIST_ITEMS {
-        chars.push_str(item);
-    }
-    
-    // 去重并排序
-    let mut chars: Vec<char> = chars.chars().collect();
-    chars.sort();
-    chars.dedup();
-    
-    chars.into_iter().collect()
-} 
+// pub fn get_all_chars() -> String {
+//     let mut chars = String::new();
+//     
+//     // 添加标题
+//     chars.push_str(WINDOW_TITLE);
+//     chars.push_str(HEADING);
+//     chars.push_str(RESET_BUTTON);
+//     
+//     // 添加所有清单项
+//     for item in CHECKLIST_ITEMS {
+//         chars.push_str(item);
+//     }
+//     
+//     // 去重并排序
+//     let mut chars: Vec<char> = chars.chars().collect();
+//     chars.sort();
+//     chars.dedup();
+//     
+//     chars.into_iter().collect()
+// } 
